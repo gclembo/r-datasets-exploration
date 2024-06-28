@@ -2,7 +2,9 @@
 title: "Sleep Data Analysis"
 date: 2024-06-27
 author: Carter Lembo
-format: html
+format: 
+  html:
+    toc: true
 ---
 
 ## Intro
