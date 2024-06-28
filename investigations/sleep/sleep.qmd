@@ -9,11 +9,11 @@ format:
 
 ## Intro
 
-For this project, I want to analyse the built in dataset `datasets::sleep` or Student's Sleep Data. This dataset contains information about the increase in the number of hours of sleep of two different drugs.
+For this project, I want to explore and analyse the built in dataset `datasets::sleep` or Student's Sleep Data. This dataset contains information about two different drug treatments, and the increase in the number of hours of sleep for participants when they used each drug.
 
 ## Setup
 
-Using the tidyverse package for data wrangling and ggplot
+Using the tidyverse package for data wrangling and contains ggplot for visualization
 
 ```{r}
 #| label: setup
@@ -23,10 +23,11 @@ library(tidyverse)
 
 ## Exploration
 
-Looking at the overall dataset where "extra" is the number of hours of sleep increase from a drug, "group" confusingly labels which drug is used as a treatment, and "ID" identifies which subject the treatment is applied to.
+Looking at the overall dataset structure, "extra" is the number of hours of sleep increase when using a drug, "group" labels which drug is used as a treatment, and "ID" identifies which subject the treatment is applied to.
 
 ```{r}
 #| label: exploration
+#| warning: false
 sleep |> 
   names()
 
@@ -66,14 +67,14 @@ I want to test if there is a significant difference between the true mean change
 
 Hypotheses:
 
-$H_0: \mu_{\text{diff}} = 0$  
+$H_0: \mu_{\text{diff}} = 0$\
 $H_a: \mu_{\text{diff}} \neq 0$
 
 where $\mu_{\text{diff}}$ is the difference between the true mean change in hours slept for a person given drug 1 minus drug 2.
 
 ## Check Normality
 
-Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for an individual given drug 1 vs drug 2. First I will set up a vector of the differences for each person.
+Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for an individual given drug 1 vs drug 2 is approximately normal. To do this I will pivot the data so that each individual is paired with their sleep scores, and then extract the differences to analyze.
 
 ```{r}
 #| label: differences
@@ -97,14 +98,14 @@ differences$diff |>
   shapiro.test()
 ```
 
-This gives a p-value of 0.03334 which is less than 0.05 we can say the distributions of differences is approximately normal. 
+This gives a p-value of 0.03334 which is less than 0.05 we can say the distributions of differences is approximately normal.
 
 ## Performing the Test
 
-Now we can perform the paired t-test.
+Now we can perform the paired t-test. Becase this is a paired test I can just perform a t-test on the differences.
 
 ```{r}
-#| label: test
+#| label: test-method-1
 differences |> 
   t.test(
     alternative = "two.sided",
@@ -113,4 +114,29 @@ differences |>
   )
 ```
 
-Because the p-value of 0.002833 is less than 0.05 I can say there is significant evidence that there is a difference between the true mean change in hours slept for an individual given drug 1 vs drug 2, and reject the null hypothesis. 
+But you could also use the original dataset using `paired = TRUE` but the data must be sorted correctly. A safer way is to pivot the data wider[^1] and then use `t.test()`.
+
+[^1]: I also did this when extracting the differences in [Check Normality], but I wanted to show it again to make it clear what I am doing.
+
+```{r}
+#| label: test-method-2
+
+sleep_wide <- sleep |> 
+  pivot_wider(
+    names_from = group,
+    names_prefix = "drug_",
+    values_from = extra
+  )
+
+t.test(
+  x = sleep_wide$drug_1,
+  y = sleep_wide$drug_2,
+  paired = TRUE,
+  alternative = "two.sided",
+  mu = 0,
+  conf.level = 0.95
+)
+
+```
+
+Both methods return the same result. Because the p-value of 0.002833 is less than 0.05 I can say there is significant evidence that there is a difference between the true mean change in hours slept for an individual given drug 1 vs drug 2, and reject the null hypothesis.

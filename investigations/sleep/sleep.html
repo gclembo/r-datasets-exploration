@@ -125,18 +125,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="intro" class="level2">
 <h2 class="anchored" data-anchor-id="intro">Intro</h2>
-<p>For this project, I want to analyse the built in dataset <code>datasets::sleep</code> or Student’s Sleep Data. This dataset contains information about the increase in the number of hours of sleep of two different drugs.</p>
+<p>For this project, I want to explore and analyse the built in dataset <code>datasets::sleep</code> or Student’s Sleep Data. This dataset contains information about two different drug treatments, and the increase in the number of hours of sleep for participants when they used each drug.</p>
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<p>Using the tidyverse package for data wrangling and ggplot</p>
+<p>Using the tidyverse package for data wrangling and contains ggplot for visualization</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="exploration" class="level2">
 <h2 class="anchored" data-anchor-id="exploration">Exploration</h2>
-<p>Looking at the overall dataset where “extra” is the number of hours of sleep increase from a drug, “group” confusingly labels which drug is used as a treatment, and “ID” identifies which subject the treatment is applied to.</p>
+<p>Looking at the overall dataset structure, “extra” is the number of hours of sleep increase when using a drug, “group” labels which drug is used as a treatment, and “ID” identifies which subject the treatment is applied to.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sleep <span class="sc">|&gt;</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -228,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="check-normality" class="level2">
 <h2 class="anchored" data-anchor-id="check-normality">Check Normality</h2>
-<p>Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for an individual given drug 1 vs drug 2. First I will set up a vector of the differences for each person.</p>
+<p>Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for an individual given drug 1 vs drug 2 is approximately normal. To do this I will pivot the data so that each individual is paired with their sleep scores, and then extract the differences to analyze.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>differences <span class="ot">&lt;-</span> sleep <span class="sc">|&gt;</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
@@ -256,7 +256,7 @@ W = 0.82987, p-value = 0.03334</code></pre>
 </section>
 <section id="performing-the-test" class="level2">
 <h2 class="anchored" data-anchor-id="performing-the-test">Performing the Test</h2>
-<p>Now we can perform the paired t-test.</p>
+<p>Now we can perform the paired t-test. Becase this is a paired test I can just perform a t-test on the differences.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>differences <span class="sc">|&gt;</span> </span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t.test</span>(</span>
@@ -278,10 +278,49 @@ mean of x
     -1.58 </code></pre>
 </div>
 </div>
-<p>Because the p-value of 0.002833 is less than 0.05 I can say there is significant evidence that there is a difference between the true mean change in hours slept for an individual given drug 1 vs drug 2, and reject the null hypothesis.</p>
+<p>But you could also use the original dataset using <code>paired = TRUE</code> but the data must be sorted correctly. A safer way is to pivot the data wider<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and then use <code>t.test()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>sleep_wide <span class="ot">&lt;-</span> sleep <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from =</span> group,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_prefix =</span> <span class="st">"drug_"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> extra</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> sleep_wide<span class="sc">$</span>drug_1,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> sleep_wide<span class="sc">$</span>drug_2,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">paired =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">"two.sided"</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu =</span> <span class="dv">0</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">conf.level =</span> <span class="fl">0.95</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Paired t-test
+
+data:  sleep_wide$drug_1 and sleep_wide$drug_2
+t = -4.0621, df = 9, p-value = 0.002833
+alternative hypothesis: true mean difference is not equal to 0
+95 percent confidence interval:
+ -2.4598858 -0.7001142
+sample estimates:
+mean difference 
+          -1.58 </code></pre>
+</div>
+</div>
+<p>Both methods return the same result. Because the p-value of 0.002833 is less than 0.05 I can say there is significant evidence that there is a difference between the true mean change in hours slept for an individual given drug 1 vs drug 2, and reject the null hypothesis.</p>
 </section>
 
-</main>
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>I also did this when extracting the [differences] in <a href="#check-normality">Check Normality</a> but I wanted to show it again to make it clear what I am doing.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
