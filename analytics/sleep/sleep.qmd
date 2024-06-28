@@ -1,0 +1,73 @@
+---
+title: "Sleep Data Analysis"
+date: 2024-06-27
+author: Carter Lembo
+format: html
+---
+
+## Intro
+
+For this project, I want to analyse the built in dataset `datasets::sleep` or Student's Sleep Data. This dataset contains information about the increase in the number of hours of sleep of two different drugs.
+
+## Setup
+
+Using the tidyverse package for data wrangling and ggplot
+
+```{r}
+#| label: setup
+#| warning: false
+library(tidyverse)
+```
+
+## Exploration
+
+Looking at the overall dataset where "extra" is the number of hours of sleep increase from a drug, "group" confusingly labels which drug is used as a treatment, and "ID" identifies which subject the treatment is applied to.
+
+```{r}
+sleep |> 
+  names()
+
+sleep |> 
+  head() |> 
+  knitr::kable()
+```
+
+Now I want to visualize the data for each drug.
+
+```{r}
+#| label: fig-sleep-distribution
+#| fig-cap: Sleep Data Distribution
+sleep |> 
+  ggplot(aes(x = extra, y = group)) +
+  geom_boxplot(aes(fill = group)) +
+  geom_point() +
+  labs(
+    title = "Change in Hours of Sleep of Two Drugs",
+    x = "Change in Hours Slept", y = "Drug Treatment",
+    caption = "Source: Cushny, A. R. and Peebles, A. R. (1905) 
+    The action of optical isomers: II hyoscines. 
+    The Journal of Physiology 32, 501–510."
+  ) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_y_discrete(labels = c("Drug 1", "Drug 2")) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+  
+```
+
+From this plot we can see that drug 2 seems a bit better than drug 1 but I want to test if there is a significant difference.
+
+## Test Plan
+
+I want to test if there is a significant difference between the true mean change in hours slept for a person given drug 1 vs drug 2. Because the data is paired by the person given the drug, I can perform a paired t-test to see if there is a significant difference in the change in sleep between the two treatments.
+
+Hypotheses:
+
+$H_0: \mu_{\text{diff}} = 0$  
+$H_a: \mu_{\text{diff}} \neq 0$
+
+where $\mu_{\text{diff}}$ is the difference between the true mean change in hours slept for a person given drug 1 minus drug 2
+
+## Check Normality
+
+Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for a person given drug 1 vs drug 2.
