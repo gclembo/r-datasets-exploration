@@ -198,7 +198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="fig-sleep-distribution" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="sleep_files/figure-html/fig-sleep-distribution-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption class="figure-caption">Figure&nbsp;1: Sleep Data Distribution</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;1: Sleep Data Distributions</figcaption>
 </figure>
 </div>
 </div>
@@ -207,15 +207,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="test-plan" class="level2">
 <h2 class="anchored" data-anchor-id="test-plan">Test Plan</h2>
-<p>I want to test if there is a significant difference between the true mean change in hours slept for a person given drug 1 vs drug 2. Because the data is paired by the person given the drug, I can perform a paired t-test to see if there is a significant difference in the change in sleep between the two treatments.</p>
+<p>I want to test if there is a significant difference between the true mean change in hours slept for an individual given drug 1 vs drug 2. Because the data is paired by the person given the drug, I can perform a paired t-test to see if there is a significant difference in the change in sleep between the two treatments. I plan to use a significance level of 0.05.</p>
 <p>Hypotheses:</p>
 <p><span class="math inline">\(H_0: \mu_{\text{diff}} = 0\)</span><br>
 <span class="math inline">\(H_a: \mu_{\text{diff}} \neq 0\)</span></p>
-<p>where <span class="math inline">\(\mu_{\text{diff}}\)</span> is the difference between the true mean change in hours slept for a person given drug 1 minus drug 2</p>
+<p>where <span class="math inline">\(\mu_{\text{diff}}\)</span> is the difference between the true mean change in hours slept for a person given drug 1 minus drug 2.</p>
 </section>
 <section id="check-normality" class="level2">
 <h2 class="anchored" data-anchor-id="check-normality">Check Normality</h2>
-<p>Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for a person given drug 1 vs drug 2.</p>
+<p>Before I can use a paired t-test, I must first ensure the distribution of the differences between the change in hours slept for an individual given drug 1 vs drug 2. First I will set up a vector of the differences for each person.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>differences <span class="ot">&lt;-</span> sleep <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(group, ID) <span class="sc">|&gt;</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(extra[group <span class="sc">==</span> <span class="dv">1</span>] <span class="sc">-</span> extra[group <span class="sc">==</span> <span class="dv">2</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next I will check to see if the data is approximately normal. To do this I will perform a quick Shapiro-Wilk test for normality with the the traditional significance level of 0.05.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>differences <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">shapiro.test</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  differences
+W = 0.82987, p-value = 0.03334</code></pre>
+</div>
+</div>
+<p>This gives a p-value of 0.03334 which is less than 0.05 we can say the distributions of differences is approximately normal.</p>
+</section>
+<section id="performing-the-test" class="level2">
+<h2 class="anchored" data-anchor-id="performing-the-test">Performing the Test</h2>
+<p>Now we can perform the paired t-test.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>differences <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t.test</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">alternative =</span> <span class="st">"two.sided"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mu =</span> <span class="dv">0</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">conf.level =</span> <span class="fl">0.95</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    One Sample t-test
+
+data:  differences
+t = -4.0621, df = 9, p-value = 0.002833
+alternative hypothesis: true mean is not equal to 0
+95 percent confidence interval:
+ -2.4598858 -0.7001142
+sample estimates:
+mean of x 
+    -1.58 </code></pre>
+</div>
+</div>
+<p>Because the p-value of 0.002833 is less than 0.05 I can say there is significant evidence that there is a difference between the true mean change in hours slept for an individual given drug 1 vs drug 2, and reject the null hypothesis.</p>
 </section>
 
 </main>
