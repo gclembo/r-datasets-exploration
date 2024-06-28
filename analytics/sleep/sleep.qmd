@@ -76,8 +76,14 @@ Before I can use a paired t-test, I must first ensure the distribution of the di
 ```{r}
 #| label: differences
 differences <- sleep |> 
-  arrange(group, ID) |> 
-  with(extra[group == 1] - extra[group == 2])
+  pivot_wider(
+    names_from = group,
+    values_from = extra
+  ) |> 
+  mutate(
+    diff = `1` - `2`,
+    .keep = "none"
+  )
 
 ```
 
@@ -85,7 +91,7 @@ Next I will check to see if the data is approximately normal. To do this I will 
 
 ```{r}
 #| label: normality-test
-differences |> 
+differences$diff |> 
   shapiro.test()
 ```
 
