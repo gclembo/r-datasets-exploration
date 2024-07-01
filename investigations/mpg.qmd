@@ -1,0 +1,29 @@
+---
+title: "cars"
+date: 2024-07-01
+author: Carter Lembo
+format: 
+  html:
+    toc: true
+---
+
+```{r}
+library(tidyverse)
+
+
+```
+
+```{r}
+mpg |> 
+  names()
+
+mpg |> 
+  head() |> 
+  knitr::kable()
+```
+```{r}
+mpg$cty |> 
+  shapiro.test()
+
+```
+

@@ -1,0 +1,77 @@
+---
+title: "Orange Tree Dataset Analysis"
+date: 2024-07-01
+author: Carter Lembo
+format: 
+  html:
+    toc: true
+---
+
+## Intro
+
+The Orange dataset or Growth of Orange Trees contains information about the growth of a set of Orange trees. I want to explore this data and use linear regression to analyze how the age of the tree effects its circumference. 
+
+## Setup
+
+I will be using the tidyverse for data manipulation and visualization. 
+
+```{r}
+#| label: setup
+#| output:  false
+#| 
+library(tidyverse)
+```
+
+
+## Exploration
+
+Looking at the data we can see there are three columns. "Tree" identifies which tree is being measured, "age" measures the trees age in days, and "circumference" is the circumference of the tree in millimeters. 
+
+```{r}
+#| label: exploration
+ 
+Orange |> 
+  names()
+
+Orange |> 
+  head() |> 
+  knitr::kable()
+
+```
+
+## Visualization
+
+Before the linear regression analysis, I want to make sure the data is roughly linear.
+```{r}
+#| label: fig-orange-tree-growth
+#| fig-cap: Orange Tree Growth
+#| warning: false
+
+Orange |> 
+  ggplot(aes(x = age, y = circumference)) +
+  geom_point(aes(color = Tree)) + 
+  labs(
+    title = "Orange Tree Growth with Tree Age",
+    x = "Age (days)", y = "Circumference (mm)",
+    caption = "Draper, N. R. and Smith, H. (1998), 
+    Applied Regression Analysis (3rd ed), Wiley (exercise 24.N)."
+  ) +
+  scale_color_discrete(breaks = 1:5) +
+  theme_bw()
+
+```
+ 
+@fig-orange-tree-growth shows that the data is approximately linear. 
+
+## Issues
+
+The data has a few issues that prevent a simple linear regression. On issue is that the data points are not independent, the series is from the same set of trees. Another issue is that the response variable distribution is less normal than I would like. This can be shown with a Shapiro-Wilk test.
+
+```{r}
+Orange$circumference |> 
+  shapiro.test()
+
+
+```
+The p-value is greater than the traditional significance level of 0.05 so I cannot say the data is approximately normal. These issues make it difficult to justify a linear regression model for the data without further data manipulation to attempt to at least normalize the response variable data. Because of these reasons, I will not continue with a linear regression model but may return to this dataset later. 
+
