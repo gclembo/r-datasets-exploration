@@ -63,15 +63,6 @@ Orange |>
  
 @fig-orange-tree-growth shows that the data is approximately linear. 
 
-## Issues
+## Issue
 
-The data has a few issues that prevent a simple linear regression. On issue is that the data points are not independent, the series is from the same set of trees. Another issue is that the response variable distribution is less normal than I would like. This can be shown with a Shapiro-Wilk test.
-
-```{r}
-Orange$circumference |> 
-  shapiro.test()
-
-
-```
-The p-value is greater than the traditional significance level of 0.05 so I cannot say the data is approximately normal. These issues make it difficult to justify a linear regression model for the data without further data manipulation to attempt to at least normalize the response variable data. Because of these reasons, I will not continue with a linear regression model but may return to this dataset later. 
-
+One issue with this data is that it is sampled many times from the same individuals, therefore the samples are not random or independent. This violates the assumptions the linear regression model so it would not be appropriate to use this model. Because of this, I will not be continuing using this data for now. 

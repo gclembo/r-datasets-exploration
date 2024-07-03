@@ -1,0 +1,35 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+library(tidyverse)
+
+
+
+  
+  
+```
+```{r}
+nile_df <- data.frame(Flow = as.vector(Nile), Year =  as.vector(time(Nile)))
+
+nile_df |> 
+  ggplot(aes(x = Year, y = Flow)) +
+  geom_line() +
+  theme_bw()
+
+```
+
+```{r}
+Nile |> 
+  shapiro.test()
+
+
+t <- Nile |> 
+  t.test()
+
+t$conf.int
+
+```
+
