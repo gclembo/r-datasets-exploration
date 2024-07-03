@@ -1,35 +1,95 @@
 ---
-title: "Untitled"
-format: html
+title: "Nile River Annual Flow"
+date: 2024-07-03
+author: Carter Lembo
+format: 
+  html:
+    toc: true
 ---
 
+## Intro
+
+I want to estimate the average annual flow of the river Nile based on the data from 1871 to 1970 in the dataset Nile or Flow of the River Nile.
+
+## Setup
+
+I will be using the tidyverse for data manipulation and visualization.
+
 ```{r}
+#| label: setup
+#| output: false
+
 library(tidyverse)
-
-
-
-  
   
 ```
+
+## Convert to Dataframe
+
+This data is stored as a vector with an associated time series so I want to convert to a dataframe to do my analysis. Values for annual flow are measured in 10^8^m^3^.
+
 ```{r}
-nile_df <- data.frame(Flow = as.vector(Nile), Year =  as.vector(time(Nile)))
+#| label: forming-dataframe
+
+
+nile_df <- data.frame(flow = as.vector(Nile), year =  as.vector(time(Nile)))
+```
+
+## Visualization 
+
+```{r}
+#| label: fig-annual-nile-flow
+#| fig-cap: Annual Nile River Flow 1871-1970s
+
 
 nile_df |> 
-  ggplot(aes(x = Year, y = Flow)) +
+  ggplot(aes(x = year, y = flow)) +
   geom_line() +
+  labs(
+    title = "Nile River Annual Flow 1871-1970",
+     x = "Year", 
+    y = expression(paste(plain("Water Flow "), 10^8*m^3)),
+    caption = "Becker, R. A., Chambers, J. M. and Wilks, A. R. (1988) 
+    The New S Language. Wadsworth & Brooks/Cole."
+  ) +
   theme_bw()
 
 ```
 
+## Get Sample
+
+The data I have is for all years from 1870-1970. I want to estimate the true average for this range, but to do this, I am going to extract a sample of the total dataset. I am going to take a smaller sample of the overall data and then estimate based on that. Since I have the full data as well, I can compare to the true mean of the data. 
+
 ```{r}
-Nile |> 
-  shapiro.test()
+#| label: extract-sample
 
+set.seed(5) 
 
-t <- Nile |> 
-  t.test()
+sample <- nile_df |> 
+  sample_n(10)
+```
 
-t$conf.int
+## Interval
+
+I want to estimate the true mean Nile flow in the years 1871-1970. I am going to use a confidence interval with a confidence level of 95%. To construct this interval, I will use the `t.test()` function and take the interval.  
+
+```{r}
+#| label: construct-interval
+
+results <- sample$flow |> 
+  t.test(conf.level = 0.95)
+
 
 ```
+
+This gives me a mean estimate of `r results$estimate` and an interval of (`r results$conf.int`).
+
+## Comparison
+
+Now that I have an interval of (`r results$conf.int`), I can compare to the true mean of the population. 
+
+```{r}
+mean(nile_df$flow)
+```
+In this case, the interval captures the true mean river flow from 1871-1970. Changing the seed value in [Get Sample] will effect the exact numbers. 
+
 

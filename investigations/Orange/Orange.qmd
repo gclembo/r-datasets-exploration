@@ -17,8 +17,9 @@ I will be using the tidyverse for data manipulation and visualization.
 
 ```{r}
 #| label: setup
-#| output:  false
-#| 
+#| output: false
+
+
 library(tidyverse)
 ```
 
