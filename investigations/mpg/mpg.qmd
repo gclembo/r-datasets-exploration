@@ -1,5 +1,5 @@
 ---
-title: "cars"
+title: "MPG Data"
 date: 2024-07-01
 author: Carter Lembo
 format: 
@@ -7,11 +7,24 @@ format:
     toc: true
 ---
 
+## Intro
+I want to use the mpg dataset to create a model to predict city fuel efficiency of cars based on other attributes.
+
+## Setup
+
+I am using the tidyverse for data manipulation and visualization.
+
 ```{r}
+#| label: setup
+#| output: false
+
 library(tidyverse)
 
-
 ```
+
+## Exploration
+
+The dataset mpg or Fuel economy data from 1999 to 2008 for 38 popular models of cars contains many variables on various types of cars.
 
 ```{r}
 mpg |> 
@@ -20,10 +33,62 @@ mpg |>
 mpg |> 
   head() |> 
   knitr::kable()
-```
-```{r}
-mpg$cty |> 
-  shapiro.test()
 
 ```
+
+
+## Linear Regression
+
+For the features to include in the model I chose to use the engine displacement, the year of manufacture, the number of cylinders, the type of drive train, and the class. I chose these variables as they seemed most important. I wanted to focus more on the features of the cars which would impact the fuel efficiency without being colinear. For example, I did not include highway miles per gallon to avoid colinearity. 
+
+```{r}
+features <- c("displ", "cyl", "year", "drv", "fl", "class")
+
+data <- mpg |> 
+  select(cty, all_of(features))
+
+model <- lm(cty ~ ., data = data)
+
+```
+
+This model has a multiple R-squared of `r summary(model)$r.squared`
+
+## Second Method
+
+I can also perform linear regression with the `caret` package,
+
+```{r}
+#| label: second-method
+#| warning: false
+
+library(caret)
+
+model2 <- train(
+            form = cty ~ .,
+            data = data,
+            method = "lm"
+          )
+```
+
+This gives me a multiple R-squared of `r summary(model2)$r.squared` as well.
+
+
+## Residuals
+
+Finally we want to look at the residuals and make sure there are not odd patterns which could indicate the model is not appropriate. 
+
+```{r}
+#| label: fig-residuals
+#| fig-cap: Model Residuals
+
+broom::augment(model) |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_abline(slope = 0, intercept = 0, color = "blue") +
+  geom_point() +
+  labs(x = "Predicted", y = "Residual")
+
+
+```
+
+The variance in these residuals does not seem consistent. The residuals seem to get larger as the predicted values increase. This suggests heteroscedasticity and therefore this model is not a good choice. 
 
