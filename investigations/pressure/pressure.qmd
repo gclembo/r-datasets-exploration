@@ -1,0 +1,119 @@
+---
+title: "Vapor Pressure of Mercury"
+date: "`r Sys.Date()`"
+author: "Carter Lembo"
+format: 
+  html:
+    toc: true
+---
+
+## Intro
+
+Using the built in `pressure` dataset, I want to fit a curve to fit vapor pressure of mercury (mm) as a function of the temperature (°C).
+
+## Setup
+
+I will be using tidyverse packages for data visualization and manipulation.
+
+```{r}
+#| label: setup
+#| output: false
+
+library(tidyverse)
+```
+
+## Create Dataframe
+
+I am creating a dataframe with the data from the `pressure` dataset.
+
+```{r}
+#| label: forming-dataset
+
+pressure_df <- data.frame(pressure)
+
+pressure_df |>
+  glimpse()
+```
+
+## Plotting Data
+
+Let us see what the data looks like so far.
+
+```{r}
+#| label: fig-mercury-pressure
+#| fig-cap: Vapor Pressure of Mercury
+pressure_df |>
+  ggplot(aes(temperature, pressure)) +
+  geom_point() +
+  labs(
+    title = "Mercury Vapor Pressure vs. Temperature",
+    x = "Temperature (Degrees C)", y = "Vapor Pressure (mm)",
+    caption = "Weast, R. C., ed. (1973) Handbook of Chemistry and Physics. CRC Press."
+  ) +
+  theme_bw()
+```
+
+## Curve Fitting
+
+Based on my research online[^1] the equation $\ln(P) = A - \dfrac{B}{T + C}$ can be used to model the relationship between Pressure (P) and Temperature (T). A, B, and C are constants. I have found the starting values of 10, -10, and 10 to work well when using `nls()` to fit the curve.
+
+[^1]: <https://books.google.com/books?id=DJaxUL3numgC&pg=PA331>
+
+```{r}
+#| label: curve-fitting
+
+model <- nls(
+  log(pressure) ~ a + b / (temperature + c),
+  data = pressure_df,
+  start = list(a = 10, b = -10, c = 10)
+)
+
+model_summary <- summary(model)
+coef <- model_summary$coefficients[1:3]
+
+model_summary
+```
+
+From this we can see the values for A, B, and C of `r coef` respectively.
+
+## Curve Visualization
+
+Now that I have the coefficients for the curve, I can plot it with the data to see the fit.
+
+```{r}
+#| label: plot-curve
+curve <- function(x) {
+  exp(coef[1] + coef[2] / (x + coef[3]))
+}
+
+pressure_df |>
+  ggplot(aes(temperature, pressure)) +
+  geom_point() +
+  labs(
+    title = "Mercury Vapor Pressure vs. Temperature",
+    x = "Temperature (Degrees C)", y = "Vapor Pressure (mm)",
+    caption = "Weast, R. C., ed. (1973) Handbook of Chemistry and Physics. CRC Press."
+  ) +
+  theme_bw() +
+  geom_function(fun = curve)
+```
+
+## Check Residuals
+
+While the curve fits the data fairly well, it should be noted the residuals suggest the lower predictions do not fit as well as the higher values for this model. One points especially deviates from predictions.
+
+```{r}
+#| label: resid-analysis
+
+broom::augment(model) |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_abline(slope = 0, intercept = 0, color = "blue") +
+  geom_point(
+    data = broom::augment(model) |> filter(.resid > 0.1),
+    color = "red",
+    size = 5
+  ) +
+  geom_point(size = 3) +
+  labs(x = "Predicted", y = "Residual") +
+  theme_bw()
+```
