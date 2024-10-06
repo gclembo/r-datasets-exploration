@@ -1,6 +1,6 @@
 ---
 title: "MPG Data"
-date: 2024-07-01
+date: "`r Sys.Date()`"
 author: Carter Lembo
 format: 
   html:
@@ -27,6 +27,8 @@ library(tidyverse)
 The dataset mpg or Fuel economy data from 1999 to 2008 for 38 popular models of cars contains many variables on various types of cars.
 
 ```{r}
+#| label: exploration
+
 mpg |> 
   names()
 
@@ -37,11 +39,14 @@ mpg |>
 ```
 
 
-## Linear Regression
+## First Attempt 
 
-For the features to include in the model I chose to use the engine displacement, the year of manufacture, the number of cylinders, the type of drive train, and the class. I chose these variables as they seemed most important. I wanted to focus more on the features of the cars which would impact the fuel efficiency without being colinear. For example, I did not include highway miles per gallon to avoid colinearity. 
+For the features to include in the model I chose to use the engine displacement, the year of manufacture, the number of cylinders, the type of drive train, and the class.
+
+### Modeling
 
 ```{r}
+#| label: model-1
 features <- c("displ", "cyl", "year", "drv", "fl", "class")
 
 data <- mpg |> 
@@ -53,29 +58,10 @@ model <- lm(cty ~ ., data = data)
 
 This model has a multiple R-squared of `r summary(model)$r.squared`
 
-## Second Method
 
-I can also perform linear regression with the `caret` package,
+### Residuals
 
-```{r}
-#| label: second-method
-#| warning: false
-
-library(caret)
-
-model2 <- train(
-            form = cty ~ .,
-            data = data,
-            method = "lm"
-          )
-```
-
-This gives me a multiple R-squared of `r summary(model2)$r.squared` as well.
-
-
-## Residuals
-
-Finally we want to look at the residuals and make sure there are not odd patterns which could indicate the model is not appropriate. 
+Finally we want to look at the residuals and make sure there are not strange patterns which could indicate the model is not appropriate. 
 
 ```{r}
 #| label: fig-residuals
@@ -90,5 +76,44 @@ broom::augment(model) |>
 
 ```
 
-The variance in these residuals does not seem consistent. The residuals seem to get larger as the predicted values increase. This suggests heteroscedasticity and therefore this model is not a good choice. 
+The residuals to the right seem to be more scattered than on the left. To help with this I will transform the target variable using a Box Cox transformation when training the model. 
+
+## Second Attempt
+
+This time I will fit the model based on a transformed target using the Box-Cox transform. 
+
+### Modeling 
+
+```{r}
+#| label: model-2
+
+lambda <- forecast::BoxCox.lambda(data$cty)
+
+model2 <- lm(forecast::BoxCox(cty, lambda) ~ ., data = data)
+
+```
+
+This model gives us an R-squared of `r summary(model2)$r.squared`
+
+### Residuals
+
+Looking at the residuals for this model, there is much less of a pattern left over.
+
+```{r}
+#| label: fig-residuals-2
+#| fig-cap: Residuals of Second Model
+
+broom::augment(model2) |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_abline(slope = 0, intercept = 0, color = "blue") +
+  geom_point() +
+  labs(x = "Predicted", y = "Residual")
+
+
+```
+
+## Final Notes 
+
+The second transformed model appears to perform better than the first. Keep in mind the results of the second model have to be reverse transformed using `forecast::InvBoxCox()` with the lambda value `r lambda`. 
+
 
